@@ -30,14 +30,16 @@ function App() {
 // Estas páginas serão criadas nas próximas etapas
 function Inicio() {
   return (
-  <div class="jumbotron text-center">
+  <div className="jumbotron text-center">
     <h1>Centro de Inspeção de Automóveis</h1>
     <p>IPO - ESDS1</p>
   </div>
   );
 }
 function ClientesList() {
-  return (<h2>Página de Clientes</h2>);
+  return (<h2>Página de Clientes
+    <button className="btn btn-primary"><i className="fa fa-plus"></i> Novo Cliente</button>
+  </h2>);
 }
 function VeiculosList() {
   return (<h2>Página de Veículos</h2>);
