@@ -1,0 +1,14 @@
+info:
+  name: Untitled 1
+  type: http
+
+http:
+  method: GET
+  url: https://effective-capybara-v665669654wghp5gj-3000.app.github.dev/veiculos
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

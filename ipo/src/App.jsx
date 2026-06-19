@@ -99,10 +99,10 @@ function ClientesList() {
     <>
       <div className="row">
         <div className="col-6">
-          <h2>Veiculos</h2>
+          <h2>Clientes</h2>
         </div>
         <div className="col-6 text-right">
-          <button className="btn btn-dark ml-3" ><i className="fa fa-plus-square" aria-hidden="true"></i> Novo Veiculo</button>
+          <button className="btn btn-dark ml-3" ><i className="fa fa-plus-square" aria-hidden="true"></i> Novo Cliente</button>
           <button className="btn btn-light ml-3" onClick={fetchData}><i className="fa fa-refresh" aria-hidden="true"></i> Atualizar</button>
         </div>
       </div>
@@ -117,28 +117,27 @@ function ClientesList() {
       <table className="table table-striped">
         <thead>
           <tr>
-            <th>Matrícula</th>
-            <th>Data Livrete</th>
-            <th>Ano de Fabrico</th>
-            <th>Nome Cliente</th>
-            <th>Marca</th>
+            <th>Código</th>
+            <th>Nome</th>
+            <th>Morada</th>
+            <th>NIF</th>
+            <th>Opções</th>
           </tr>
         </thead>
         <tbody>
-          {veiculos.map(veiculo => (
-            <tr key={veiculo.codveic}>
-              <td>{veiculo.codveic}</td>
-              <td>{veiculo.data_livrete}</td>
-              <td>{veiculo.ano_fabrico}</td>
-              <td>{veiculo.nome_cliente}</td>
-              <td>{veiculo.marca}</td>
+          {clientes.map(cliente => (
+            <tr key={cliente.codcli}>
+              <td>{cliente.codcli}</td>
+              <td>{cliente.nome}</td>
+              <td>{cliente.morada}</td>
+              <td>{cliente.nif}</td>
               <td style={{ whiteSpace: 'nowrap' }}>
                 <button className="btn btn-dark btn-sm mr-2" ><i className='fa fa-eye' aria-hidden='true'></i></button>
 
                 <button className="btn btn-dark btn-sm mr-2" ><i className='fa fa-pencil' aria-hidden='true'></i></button>
 
                 <button className="btn btn-dark btn-sm"
-                  onClick={() => openDeleteModal(veiculo.codveic)}> <i className='fa fa-trash' aria-hidden='true'></i>
+                  onClick={() => openDeleteModal(cliente.codcli)}> <i className='fa fa-trash' aria-hidden='true'></i>
                 </button>
 
               </td>
@@ -159,7 +158,7 @@ function ClientesList() {
                   </button>
                 </div>
                 <div className="modal-body">
-                  <p>Tem certeza que deseja eliminar este veiculo?</p>
+                  <p>Tem certeza que deseja eliminar este cliente?</p>
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={closeDeleteModal}>Cancelar</button>
@@ -199,7 +198,7 @@ function VeiculosList() {
 
   const confirmDelete = async (id) => {
     try {
-      const response = await fetch(API_BASE + '/veiculos/ ' + id, { method: 'DELETE' });
+      const response = await fetch(API_BASE + '/veiculos/' + id, { method: 'DELETE' });
       const data = await response.json();
       if (data.success) {
         fetchData();
@@ -252,28 +251,31 @@ function VeiculosList() {
       <table className="table table-striped">
         <thead>
           <tr>
+            <th>Codigo</th>
             <th>Matrícula</th>
             <th>Data Livrete</th>
             <th>Ano de Fabrico</th>
-            <th>Nome Cliente</th>
             <th>Marca</th>
+            <th>Nome de Cliente</th>
+            <th>Opções</th> 
           </tr>
         </thead>
         <tbody>
           {veiculos.map(veiculo => (
-            <tr key={veiculo.codveic}>
-              <td>{veiculo.codveic}</td>
-              <td>{veiculo.data_livrete}</td>
-              <td>{veiculo.ano_fabrico}</td>
-              <td>{veiculo.nome_cliente}</td>
-              <td>{veiculo.marca}</td>
+            <tr key={veiculo.codveiculo}>
+              <td>{veiculo.codveiculo}</td>
+              <td>{veiculo.codmatricula}</td>
+              <td>{veiculo.datalivrete}</td>
+              <td>{veiculo.anofabrico}</td>
+              <td>{veiculo.marca.marca}</td>
+              <td>{veiculo.cliente.nome}</td>
               <td style={{ whiteSpace: 'nowrap' }}>
                 <button className="btn btn-dark btn-sm mr-2" ><i className='fa fa-eye' aria-hidden='true'></i></button>
 
                 <button className="btn btn-dark btn-sm mr-2" ><i className='fa fa-pencil' aria-hidden='true'></i></button>
 
                 <button className="btn btn-dark btn-sm"
-                  onClick={() => openDeleteModal(veiculo.codveic)}> <i className='fa fa-trash' aria-hidden='true'></i>
+                  onClick={() => openDeleteModal(veiculo.codveiculo)}> <i className='fa fa-trash' aria-hidden='true'></i>
                 </button>
 
               </td>
