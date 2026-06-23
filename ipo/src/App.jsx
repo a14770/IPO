@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, UNSAFE_getTurboStreamSingleFetchDataStrategy } from 'react-router-dom';
 
 const API_BASE = 'https://turbo-zebra-wrr4rrpr4wjrhg749-3000.app.github.dev'
 
@@ -15,6 +15,7 @@ function App() {
             <Link className="nav-link" to="/clientes">Clientes</Link>
             <Link className="nav-link" to="/veiculos">Veículos</Link>
             <Link className="nav-link" to="/inspecoes">Inspeções</Link>
+
           </div>
         </div>
       </nav>
@@ -22,6 +23,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/clientes" element={<ClientesList />} />
+          <Route path="/clientes/create" element={<ClienteForm modo="create" />} />
+          <Route path="/clientes/update/:id" element={<ClienteForm modo="update" />} />
+          <Route path="/clientes/read/:id" element={<ClienteForm modo="read" />} />
           <Route path="/veiculos" element={<VeiculosList />} />
           <Route path="/inspecoes" element={<InspecoesList />} />
         </Routes>
@@ -102,7 +106,7 @@ function ClientesList() {
           <h2>Clientes</h2>
         </div>
         <div className="col-6 text-right">
-          <button className="btn btn-dark ml-3" ><i className="fa fa-plus-square" aria-hidden="true"></i> Novo Cliente</button>
+          <Link to="/clientes/create" className="btn btn-dark"><i className="fa fa-plus-square"></i> Novo Cliente</Link>
           <button className="btn btn-light ml-3" onClick={fetchData}><i className="fa fa-refresh" aria-hidden="true"></i> Atualizar</button>
         </div>
       </div>
@@ -257,7 +261,7 @@ function VeiculosList() {
             <th>Ano de Fabrico</th>
             <th>Marca</th>
             <th>Nome de Cliente</th>
-            <th>Opções</th> 
+            <th>Opções</th>
           </tr>
         </thead>
         <tbody>
@@ -332,7 +336,7 @@ function InspecoesList() {
     setDeleteId(null);
     setShowDeleteModal(false);
   };
-  
+
   const confirmDelete = async (id) => {
     try {
       const response = await fetch(API_BASE + '/inspecoes/ ' + id, { method: 'DELETE' });
@@ -446,4 +450,123 @@ function InspecoesList() {
     </>
   );
 }
+
+function ClienteForm() {
+  const [nome, setNome] = useState('');
+  const [morada, setMorada] = useState('');
+  const [nif, setNif] = useState('');
+  const [mensagemErro, setMensagemErro] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setMensagemErro(null);
+
+    if (!nome || !morada || !nif) {
+      setMensagemErro('Preencha todos os campos.');
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(API_BASE + '/clientes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nome, morada, nif }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        navigate('/clientes');
+      } else {
+        setMensagemErro(data.message || 'Erro ao submeter os dados.');
+      }
+    } catch {
+      setMensagemErro('Erro de ligação ao servidor.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="container mt-4">
+      <h2>Novo Cliente</h2>
+      
+      {mensagemErro && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          {mensagemErro}
+          <button type="button" className="close" onClick={() => setMensagemErro('')} aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-4">
+        <div className="row">
+          <div className="col-12 col-md-8 form-group">
+            <label htmlFor="nome">Nome:</label>
+            <input
+              type="text"
+              id="nome"
+              className="form-control"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-12 col-md-6 form-group">
+            <label htmlFor="morada">Morada</label>
+            <input
+              type="text"
+              id="morada"
+              className="form-control"
+              value={morada}
+              onChange={(e) => setMorada(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+          <div className="col-12 col-md-6 form-group">
+            <label htmlFor="nif">NIF</label>
+            <input
+              type="text"
+              id="nif"
+              className="form-control"
+              value={nif}
+              onChange={(e) => setNif(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <button 
+            type="submit" 
+            className="btn btn-dark mr-2" 
+            disabled={submitting}
+          >
+            {submitting ? 'A guardar...' : 'Guardar'}
+          </button>
+          
+          <button 
+            type="button" 
+            className="btn btn-secondary" 
+            onClick={() => navigate('/clientes')}
+            disabled={submitting}
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default App
