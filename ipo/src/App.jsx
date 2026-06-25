@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate, UNSAFE_getTurboStreamSingleFetchDataStrategy } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, UNSAFE_getTurboStreamSingleFetchDataStrategy, data, } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-const API_BASE = 'https://turbo-zebra-wrr4rrpr4wjrhg749-3000.app.github.dev'
+const API_BASE = 'https://reimagined-tribble-4jjrjj5jrxw7357j6-3000.app.github.dev'
 
 function App() {
 
@@ -27,13 +28,16 @@ function App() {
           <Route path="/clientes/update/:id" element={<ClienteForm modo="update" />} />
           <Route path="/clientes/read/:id" element={<ClienteForm modo="read" />} />
           <Route path="/veiculos" element={<VeiculosList />} />
+          <Route path="/veiculos/create" element={<ClienteForm modo="create" />} />
+          <Route path="/veiculos/update/:id" element={<ClienteForm modo="update" />} />
+          <Route path="/veiculos/read/:id" element={<ClienteForm modo="read" />} />
           <Route path="/inspecoes" element={<InspecoesList />} />
         </Routes>
       </div>
     </div>
   );
 }
-// Estas páginas serão criadas nas próximas etapas
+
 function Inicio() {
   return (
     <div>
@@ -45,6 +49,8 @@ function Inicio() {
   );
 
 }
+
+
 function ClientesList() {
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -178,7 +184,6 @@ function ClientesList() {
 }
 
 
-
 function VeiculosList() {
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -240,7 +245,7 @@ function VeiculosList() {
           <h2>Veiculos</h2>
         </div>
         <div className="col-6 text-right">
-          <button className="btn btn-dark ml-3" ><i className="fa fa-plus-square" aria-hidden="true"></i> Novo Veiculo</button>
+          <Link to="/veiculos/create" className="btn btn-dark"><i className="fa fa-plus-square"></i> Novo Veiculo</Link>
           <button className="btn btn-light ml-3" onClick={fetchData}><i className="fa fa-refresh" aria-hidden="true"></i> Atualizar</button>
         </div>
       </div>
@@ -451,13 +456,152 @@ function InspecoesList() {
   );
 }
 
-function ClienteForm() {
-  const [nome, setNome] = useState('');
-  const [morada, setMorada] = useState('');
-  const [nif, setNif] = useState('');
+function ClienteForm({ modo }) {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ nome: '', morada: '', nif: '' });
+  const [mensagemErro, setMensagemErro] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/clientes/${id}`);
+        const data = await response.json();
+        if (data.success) {
+          setFormData(data.data);
+        } else {
+          setMensagemErro(data.message);
+        }
+      } catch {
+        setMensagemErro('Erro ao carregar cliente');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMensagemErro(null);
+
+    if (!formData.nome || !formData.morada || !formData.nif) {
+      setMensagemErro('Preencha todos os campos.');
+      return;
+    }
+
+    try {
+      const method = modo === 'update' ? 'PUT' : 'POST';
+      const url = modo === 'update' ? `${API_BASE}/clientes/${id}` : `${API_BASE}/clientes/`;
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        navigate('/clientes');
+      } else {
+        setMensagemErro(data.message);
+      }
+    } catch {
+      setMensagemErro('Erro ao guardar o cliente');
+    }
+  };
+
+  if (loading) return <p>Carregando...</p>;
+  let title = '';
+  if (modo === 'create') title = 'Novo Cliente';
+  else if (modo === 'update') title = 'Editar Cliente #' + id;
+  else title = 'Cliente #' + id;
+
+  return (
+    <form onSubmit={modo !== 'read' ? handleSubmit : undefined}>
+      <h2>{title}</h2>
+
+      {mensagemErro && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          {mensagemErro}
+          <button type="button" className="close" onClick={() => setMensagemErro('')} aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+      )}
+
+      <div className="row">
+        <div className="col-sm-8">
+          <div className="form-group">
+            <label htmlFor="nome">Nome:</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.nome}
+              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+              required
+              readOnly={modo === 'read'}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col-sm-6">
+          <div className="form-group">
+            <label>Morada</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.morada}
+              onChange={(e) => setFormData({ ...formData, morada: e.target.value })}
+              required
+              readOnly={modo === 'read'}
+            />
+          </div>
+        </div>
+        <div className="col-sm-6">
+          <div className="form-group">
+            <label>NIF</label>
+            <input
+              type="text"
+              className="form-control"
+              value={formData.nif}
+              onChange={(e) => setFormData({ ...formData, nif: e.target.value })}
+              required
+              readOnly={modo === 'read'}
+            />
+          </div>
+        </div>
+      </div>
+
+      {modo !== 'read' ? (
+        <>
+          <button type="submit" className="btn btn-dark mr-2">Guardar</button>
+          <button type="button" className="btn btn-secondary" onClick={() => navigate('/clientes')}>Cancelar</button>
+        </>
+      ) : (
+        <button type="button" className="btn btn-secondary" onClick={() => navigate('/clientes')}>Voltar</button>
+      )}
+    </form>
+  );
+}
+
+
+function VeiculoForm() {
+  const [matricula, setMatricula] = useState('');
+  const [datalivrete, setDatalivrete] = useState('');
+  const [anofabrico, setAnofabrico] = useState('');
+  const [codigocliente, setCodigocliente] = useState('');
+  const [codigomarca, setCodigomarca] = useState('');
   const [mensagemErro, setMensagemErro] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -465,25 +609,25 @@ function ClienteForm() {
     setSubmitting(true);
     setMensagemErro(null);
 
-    if (!nome || !morada || !nif) {
+    if (!matricula || !datalivrete || !anofabrico || !codigocliente || !codigomarca) {
       setMensagemErro('Preencha todos os campos.');
       setSubmitting(false);
       return;
     }
 
     try {
-      const response = await fetch(API_BASE + '/clientes', {
+      const response = await fetch(API_BASE + '/veiculos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ nome, morada, nif }),
+        body: JSON.stringify({ matricula, datalivrete, anofabrico, codigocliente, codigomarca }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        navigate('/clientes');
+        navigate('/veiculos');
       } else {
         setMensagemErro(data.message || 'Erro ao submeter os dados.');
       }
@@ -496,8 +640,8 @@ function ClienteForm() {
 
   return (
     <div className="container mt-4">
-      <h2>Novo Cliente</h2>
-      
+      <h2>Novo Veículo</h2>
+
       {mensagemErro && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
           {mensagemErro}
@@ -510,55 +654,77 @@ function ClienteForm() {
       <form onSubmit={handleSubmit} className="mt-4">
         <div className="row">
           <div className="col-12 col-md-8 form-group">
-            <label htmlFor="nome">Nome:</label>
+            <label htmlFor="matricula">Matricula:</label>
             <input
               type="text"
-              id="nome"
+              id="matricula"
               className="form-control"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
+              value={matricula}
+              onChange={(e) => setMatricula(e.target.value)}
               disabled={submitting}
             />
           </div>
         </div>
         <div className="row">
           <div className="col-12 col-md-6 form-group">
-            <label htmlFor="morada">Morada</label>
+            <label htmlFor="datalivrete">Data Livrete</label>
             <input
-              type="text"
-              id="morada"
+              type="date"
+              id="datalivrete"
               className="form-control"
-              value={morada}
-              onChange={(e) => setMorada(e.target.value)}
+              value={datalivrete}
+              onChange={(e) => setDatalivrete(e.target.value)}
               disabled={submitting}
             />
           </div>
           <div className="col-12 col-md-6 form-group">
-            <label htmlFor="nif">NIF</label>
+            <label htmlFor="anofabrico">Ano Fabrico</label>
             <input
-              type="text"
-              id="nif"
+              type="date"
+              id="anofabrico"
               className="form-control"
-              value={nif}
-              onChange={(e) => setNif(e.target.value)}
+              value={anofabrico}
+              onChange={(e) => setAnofabrico(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+          <div className="col-12 col-md-6 form-group">
+            <label htmlFor="codigocliente">Código Cliente</label>
+            <input
+              type="code"
+              id="codigocliente"
+              className="form-control"
+              value={codigocliente}
+              onChange={(e) => setCodigocliente(e.target.value)}
+              disabled={submitting}
+            />
+          </div>
+          <div className="col-12 col-md-6 form-group">
+            <label htmlFor="codigomarca">Código Marca</label>
+            <input
+              type="code"
+              id="codigomarca"
+              className="form-control"
+              value={codigomarca}
+              onChange={(e) => setCodigomarca(e.target.value)}
               disabled={submitting}
             />
           </div>
         </div>
 
         <div className="mt-3">
-          <button 
-            type="submit" 
-            className="btn btn-dark mr-2" 
+          <button
+            type="submit"
+            className="btn btn-dark mr-2"
             disabled={submitting}
           >
             {submitting ? 'A guardar...' : 'Guardar'}
           </button>
-          
-          <button 
-            type="button" 
-            className="btn btn-secondary" 
-            onClick={() => navigate('/clientes')}
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => navigate('/veiculo')}
             disabled={submitting}
           >
             Cancelar
@@ -568,5 +734,6 @@ function ClienteForm() {
     </div>
   );
 }
+
 
 export default App
